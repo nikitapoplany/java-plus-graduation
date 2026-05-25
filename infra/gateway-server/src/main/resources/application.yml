@@ -4,9 +4,34 @@ server:
 spring:
   config:
     import: "optional:configserver:"
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: main-service-admin
+          uri: lb://main-service
+          predicates:
+            - Path=/admin/**
+
+        - id: main-service-private
+          uri: lb://main-service
+          predicates:
+            - Path=/users/**
+
+        - id: main-service-public
+          uri: lb://main-service
+          predicates:
+            - Path=/events/**, /categories/**, /compilations/**, /comments/**
 
 management:
   endpoints:
     web:
       exposure:
         include: health, info
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
