@@ -12,17 +12,17 @@ spring:
           lower-case-service-id: true
       routes:
         - id: main-service-admin
-          uri: lb://main-service
+          uri: lb://MAIN-SERVICE
           predicates:
             - Path=/admin/**
 
         - id: main-service-private
-          uri: lb://main-service
+          uri: lb://MAIN-SERVICE
           predicates:
             - Path=/users/**
 
         - id: main-service-public
-          uri: lb://main-service
+          uri: lb://MAIN-SERVICE
           predicates:
             - Path=/events/**, /categories/**, /compilations/**, /comments/**
 
