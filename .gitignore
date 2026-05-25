@@ -15,6 +15,11 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### macOS ###
+.DS_Store
+.AppleDouble
+.LSOverride
+
 ### IntelliJ IDEA ###
 .idea
 *.iws

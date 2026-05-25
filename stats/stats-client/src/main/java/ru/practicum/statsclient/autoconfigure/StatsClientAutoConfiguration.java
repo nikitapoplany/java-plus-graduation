@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 import ru.practicum.statsclient.RestStatsClient;
@@ -18,7 +19,7 @@ import java.time.Duration;
 public class StatsClientAutoConfiguration {
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(name = "statsRestTemplate")
     public RestTemplate statsRestTemplate(RestTemplateBuilder builder, StatsClientProperties props) {
         return builder
                 .setConnectTimeout(Duration.ofMillis(props.getConnectTimeoutMillis()))
@@ -28,7 +29,9 @@ public class StatsClientAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(StatsClient.class)
-    public StatsClient statsClient(RestTemplate statsRestTemplate, StatsClientProperties props) {
-        return new RestStatsClient(statsRestTemplate, props.getBaseUrl());
+    public StatsClient statsClient(RestTemplate statsRestTemplate,
+                                   DiscoveryClient discoveryClient,
+                                   StatsClientProperties props) {
+        return new RestStatsClient(statsRestTemplate, discoveryClient, props.getStatsServiceId());
     }
 }
