@@ -6,20 +6,50 @@ spring:
           enabled: true
           lower-case-service-id: true
       routes:
-        - id: main-service-admin
-          uri: lb://MAIN-SERVICE
+        - id: user-service-admin
+          uri: lb://USER-SERVICE
           predicates:
-            - Path=/admin/**
+            - Path=/admin/users, /admin/users/**
 
-        - id: main-service-private
-          uri: lb://MAIN-SERVICE
+        - id: request-service-user-requests
+          uri: lb://REQUEST-SERVICE
           predicates:
-            - Path=/users/**
+            - Path=/users/*/requests, /users/*/requests/**
 
-        - id: main-service-public
-          uri: lb://MAIN-SERVICE
+        - id: request-service-event-requests
+          uri: lb://REQUEST-SERVICE
           predicates:
-            - Path=/events/**, /categories/**, /compilations/**, /comments/**
+            - Path=/users/*/events/*/requests, /users/*/events/*/requests/**
+
+        - id: comment-service-admin
+          uri: lb://COMMENT-SERVICE
+          predicates:
+            - Path=/admin/events/comments, /admin/events/comments/**
+
+        - id: comment-service-private
+          uri: lb://COMMENT-SERVICE
+          predicates:
+            - Path=/users/*/events/*/comments, /users/*/events/*/comments/**
+
+        - id: comment-service-public
+          uri: lb://COMMENT-SERVICE
+          predicates:
+            - Path=/events/*/comments, /events/*/comments/**
+
+        - id: event-service-admin
+          uri: lb://EVENT-SERVICE
+          predicates:
+            - Path=/admin/categories, /admin/categories/**, /admin/compilations, /admin/compilations/**, /admin/events, /admin/events/**
+
+        - id: event-service-private
+          uri: lb://EVENT-SERVICE
+          predicates:
+            - Path=/users/*/events, /users/*/events/**
+
+        - id: event-service-public
+          uri: lb://EVENT-SERVICE
+          predicates:
+            - Path=/events, /events/**, /categories, /categories/**, /compilations, /compilations/**
 
 logging:
   level:
