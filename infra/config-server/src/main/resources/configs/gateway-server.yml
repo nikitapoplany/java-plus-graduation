@@ -1,0 +1,26 @@
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: main-service-admin
+          uri: lb://MAIN-SERVICE
+          predicates:
+            - Path=/admin/**
+
+        - id: main-service-private
+          uri: lb://MAIN-SERVICE
+          predicates:
+            - Path=/users/**
+
+        - id: main-service-public
+          uri: lb://MAIN-SERVICE
+          predicates:
+            - Path=/events/**, /categories/**, /compilations/**, /comments/**
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG

@@ -6,9 +6,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class StatsClientProperties {
 
     /**
-     * Базовый URL сервиса статистики, без завершающего слэша: http://host:port
+     * ID сервиса статистики в Eureka (spring.application.name сервера статистики).
      */
-    private String baseUrl = "http://localhost:9090";
+    private String statsServiceId = "stats-server";
 
     /**
      * Таймаут установки соединения (мс).
@@ -20,12 +20,12 @@ public class StatsClientProperties {
      */
     private Integer readTimeoutMillis = 5000;
 
-    public String getBaseUrl() {
-        return baseUrl;
+    public String getStatsServiceId() {
+        return statsServiceId;
     }
 
-    public void setBaseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
+    public void setStatsServiceId(String statsServiceId) {
+        this.statsServiceId = statsServiceId;
     }
 
     public Integer getConnectTimeoutMillis() {
