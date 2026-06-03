@@ -96,35 +96,6 @@ services:
       retries: 10
       start_period: 60s
 
-  # ─── Основной сервис ───────────────────────────────────────────────────────
-
-  main-service:
-    build:
-      context: .
-      dockerfile: core/main-service/Dockerfile
-    container_name: main-service
-    environment:
-      SERVER_PORT: 8081
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm_main
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-    depends_on:
-      discovery-server:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-      ewm-db:
-        condition: service_healthy
-      stats-server:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep -q UP || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 90s
-
   user-service:
     build:
       context: .

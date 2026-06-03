@@ -3,8 +3,11 @@ package ru.practicum.internal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.web.event.dto.EventDto;
 import ru.practicum.web.event.mapper.EventMapper;
 import ru.practicum.web.event.repository.EventRepository;
@@ -41,5 +44,17 @@ public class EventInternalController {
         return eventRepository.findById(eventId)
                 .map(event -> event.getConfirmedRequests() == null ? 0L : event.getConfirmedRequests())
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+    }
+
+    @PostMapping("/{eventId}/confirmed-requests")
+    @Transactional
+    public long addConfirmedRequests(@PathVariable Long eventId, @RequestParam("delta") long delta) {
+        var event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+
+        long current = event.getConfirmedRequests() == null ? 0L : event.getConfirmedRequests();
+        long updated = Math.max(0L, current + delta);
+        event.setConfirmedRequests(updated);
+        return updated;
     }
 }
