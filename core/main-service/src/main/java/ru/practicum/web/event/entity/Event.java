@@ -67,4 +67,7 @@ public class Event {
 
     @Transient
     private Long views = 0L;
+
+    @Transient
+    private Double rating = 0.0;
 }

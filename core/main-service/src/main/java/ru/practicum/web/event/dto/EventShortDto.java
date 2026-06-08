@@ -21,6 +21,7 @@ public class EventShortDto {
     private String eventDate;
     private UserShortDto initiator;
     private Location location;
+    private Double rating;
     private Long views;
     private Long confirmedRequests;
 }

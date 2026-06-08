@@ -3,11 +3,14 @@ package ru.practicum.request;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.internal.client.EventServiceClient;
 import ru.practicum.internal.client.UserServiceClient;
+import ru.practicum.statsclient.recommendation.UserActionClient;
+import ru.practicum.statsclient.recommendation.UserActionType;
 import ru.practicum.web.event.dto.EventDto;
 import ru.practicum.web.event.entity.Event;
 import ru.practicum.web.exception.ConflictException;
@@ -37,6 +40,7 @@ public class FeignBackedPrivateRequestService implements PrivateRequestService {
     private final ParticipationRequestRepository requestRepository;
     private final UserServiceClient userServiceClient;
     private final EventServiceClient eventServiceClient;
+    private final ObjectProvider<UserActionClient> userActionClientProvider;
     private final EntityManager entityManager;
 
     @Override
@@ -66,6 +70,7 @@ public class FeignBackedPrivateRequestService implements PrivateRequestService {
         if (saved.getStatus() == RequestStatus.CONFIRMED) {
             eventServiceClient.addConfirmedRequests(eventId, 1L);
         }
+        collectRegisterAction(userId, eventId);
         return ParticipationRequestMapper.toDto(saved);
     }
 
@@ -247,5 +252,17 @@ public class FeignBackedPrivateRequestService implements PrivateRequestService {
                 .confirmedRequests(new ArrayList<>())
                 .rejectedRequests(rejectedList)
                 .build();
+    }
+
+    private void collectRegisterAction(Long userId, Long eventId) {
+        try {
+            UserActionClient userActionClient = userActionClientProvider.getIfAvailable();
+            if (userActionClient == null) {
+                return;
+            }
+            userActionClient.collect(userId, eventId, UserActionType.REGISTER, java.time.Instant.now());
+        } catch (Exception e) {
+            log.warn("Cannot send REGISTER action for user {} and event {}: {}", userId, eventId, e.getMessage());
+        }
     }
 }

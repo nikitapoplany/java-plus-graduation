@@ -30,6 +30,10 @@
 		<maven.compiler.target>21</maven.compiler.target>
 		<lombok.version>1.18.38</lombok.version>
 		<spring-cloud.version>2023.0.3</spring-cloud.version>
+		<protobuf.version>3.25.5</protobuf.version>
+		<grpc.version>1.65.1</grpc.version>
+		<grpc.spring.boot.version>3.1.0.RELEASE</grpc.spring.boot.version>
+		<avro.version>1.11.3</avro.version>
 	</properties>
 
 	<dependencyManagement>
@@ -55,6 +59,33 @@
 				<groupId>ru.practicum</groupId>
 				<artifactId>stats-client</artifactId>
 				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>ru.practicum</groupId>
+				<artifactId>stats-contract</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>net.devh</groupId>
+				<artifactId>grpc-server-spring-boot-starter</artifactId>
+				<version>${grpc.spring.boot.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.devh</groupId>
+				<artifactId>grpc-client-spring-boot-starter</artifactId>
+				<version>${grpc.spring.boot.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.grpc</groupId>
+				<artifactId>grpc-bom</artifactId>
+				<version>${grpc.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.avro</groupId>
+				<artifactId>avro</artifactId>
+				<version>${avro.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

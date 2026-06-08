@@ -3,6 +3,7 @@ package ru.practicum.statsclient.autoconfigure;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -10,6 +11,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 import ru.practicum.statsclient.RestStatsClient;
 import ru.practicum.statsclient.StatsClient;
+import ru.practicum.statsclient.recommendation.GrpcRecommendationsClient;
+import ru.practicum.statsclient.recommendation.GrpcUserActionClient;
+import ru.practicum.statsclient.recommendation.RecommendationsClient;
+import ru.practicum.statsclient.recommendation.UserActionClient;
 
 import java.time.Duration;
 
@@ -33,5 +38,19 @@ public class StatsClientAutoConfiguration {
                                    DiscoveryClient discoveryClient,
                                    StatsClientProperties props) {
         return new RestStatsClient(statsRestTemplate, discoveryClient, props.getStatsServiceId());
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "grpc.client.collector", name = "address")
+    @ConditionalOnMissingBean(UserActionClient.class)
+    public UserActionClient userActionClient() {
+        return new GrpcUserActionClient();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "grpc.client.analyzer", name = "address")
+    @ConditionalOnMissingBean(RecommendationsClient.class)
+    public RecommendationsClient recommendationsClient() {
+        return new GrpcRecommendationsClient();
     }
 }
