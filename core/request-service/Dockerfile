@@ -3,12 +3,12 @@ WORKDIR /app
 
 COPY . .
 
-RUN mvn clean package -DskipTests -pl infra/gateway-server -am
+RUN mvn clean package -DskipTests -pl core/request-service -am
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY --from=build /app/infra/gateway-server/target/gateway-server-*.jar app.jar
+COPY --from=build /app/core/request-service/target/request-service-*.jar app.jar
 
-EXPOSE 8080
+EXPOSE 8084
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

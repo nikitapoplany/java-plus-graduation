@@ -1,6 +1,8 @@
 package ru.practicum.web.request.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.practicum.web.request.entity.ParticipationRequest;
 import ru.practicum.web.request.entity.RequestStatus;
 
@@ -20,4 +22,13 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
     boolean existsByEventIdAndRequesterId(Long eventId, Long requesterId);
 
     int countByEventIdAndStatus(Long eventId, RequestStatus status);
+
+    @Query("""
+            select r.event.id, count(r)
+            from ParticipationRequest r
+            where r.event.id in :eventIds and r.status = :status
+            group by r.event.id
+            """)
+    List<Object[]> countByEventIdsAndStatus(@Param("eventIds") List<Long> eventIds,
+                                            @Param("status") RequestStatus status);
 }
