@@ -7,9 +7,9 @@ grpc:
 
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:${POSTGRES_PORT:5433}/stats}
-    username: ${SPRING_DATASOURCE_USERNAME:${POSTGRES_USER:stats}}
-    password: ${SPRING_DATASOURCE_PASSWORD:${POSTGRES_PASSWORD:stats}}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/ewm_stats_db}
+    username: ${SPRING_DATASOURCE_USERNAME:${POSTGRES_USER:postgres}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${POSTGRES_PASSWORD:postgres}}
     driver-class-name: org.postgresql.Driver
   sql:
     init:
