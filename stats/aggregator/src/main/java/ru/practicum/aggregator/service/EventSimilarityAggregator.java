@@ -10,7 +10,9 @@ import ru.practicum.ewm.stats.avro.AvroBytes;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -39,13 +41,14 @@ public class EventSimilarityAggregator {
             return;
         }
 
-        updateMinWeights(eventId, userId, oldWeight, newWeight);
+        List<EventPair> updatedPairs = updateMinWeights(eventId, userId, oldWeight, newWeight);
         eventUserWeights.computeIfAbsent(eventId, ignored -> new HashMap<>()).put(userId, newWeight);
         eventWeightSums.merge(eventId, newWeight - oldWeight, Double::sum);
-        publishSimilarities(eventId, action);
+        publishSimilarities(updatedPairs, action);
     }
 
-    private void updateMinWeights(long changedEventId, long userId, double oldWeight, double newWeight) {
+    private List<EventPair> updateMinWeights(long changedEventId, long userId, double oldWeight, double newWeight) {
+        List<EventPair> updatedPairs = new ArrayList<>();
         for (Map.Entry<Long, Map<Long, Double>> entry : eventUserWeights.entrySet()) {
             long otherEventId = entry.getKey();
             if (otherEventId == changedEventId) {
@@ -60,18 +63,27 @@ public class EventSimilarityAggregator {
             double newMin = Math.min(newWeight, otherWeight);
             double delta = newMin - oldMin;
             if (delta > 0) {
-                minWeightSums.merge(new EventPair(changedEventId, otherEventId), delta, Double::sum);
+                EventPair pair = new EventPair(changedEventId, otherEventId);
+                minWeightSums.merge(pair, delta, Double::sum);
+                updatedPairs.add(pair);
             }
         }
+        return updatedPairs;
     }
 
-    private void publishSimilarities(long changedEventId, UserActionAvro action) {
+    private void publishSimilarities(List<EventPair> updatedPairs, UserActionAvro action) {
+        if (updatedPairs.isEmpty()) {
+            return;
+        }
+
+        long changedEventId = action.getEventId();
         double changedSum = eventWeightSums.getOrDefault(changedEventId, 0.0);
         if (changedSum == 0.0) {
             return;
         }
 
-        for (long otherEventId : eventWeightSums.keySet()) {
+        for (EventPair pair : updatedPairs) {
+            long otherEventId = pair.first() == changedEventId ? pair.second() : pair.first();
             if (otherEventId == changedEventId) {
                 continue;
             }
@@ -79,7 +91,6 @@ public class EventSimilarityAggregator {
             if (score <= 0.0) {
                 continue;
             }
-            EventPair pair = new EventPair(changedEventId, otherEventId);
             EventSimilarityAvro similarity = EventSimilarityAvro.newBuilder()
                     .setEventA(pair.first())
                     .setEventB(pair.second())
