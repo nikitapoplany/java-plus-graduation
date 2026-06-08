@@ -11,6 +11,7 @@ import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,14 +42,14 @@ public class EventSimilarityAggregator {
             return;
         }
 
-        List<EventPair> updatedPairs = updateMinWeights(eventId, userId, oldWeight, newWeight);
+        List<EventPair> affectedPairs = updateMinWeights(eventId, userId, oldWeight, newWeight);
         eventUserWeights.computeIfAbsent(eventId, ignored -> new HashMap<>()).put(userId, newWeight);
         eventWeightSums.merge(eventId, newWeight - oldWeight, Double::sum);
-        publishSimilarities(updatedPairs, action);
+        publishSimilarities(affectedPairs, action);
     }
 
     private List<EventPair> updateMinWeights(long changedEventId, long userId, double oldWeight, double newWeight) {
-        List<EventPair> updatedPairs = new ArrayList<>();
+        List<EventPair> affectedPairs = new ArrayList<>();
         for (Map.Entry<Long, Map<Long, Double>> entry : eventUserWeights.entrySet()) {
             long otherEventId = entry.getKey();
             if (otherEventId == changedEventId) {
@@ -59,20 +60,24 @@ public class EventSimilarityAggregator {
                 continue;
             }
 
+            EventPair pair = new EventPair(changedEventId, otherEventId);
+            affectedPairs.add(pair);
+
             double oldMin = Math.min(oldWeight, otherWeight);
             double newMin = Math.min(newWeight, otherWeight);
             double delta = newMin - oldMin;
             if (delta > 0) {
-                EventPair pair = new EventPair(changedEventId, otherEventId);
                 minWeightSums.merge(pair, delta, Double::sum);
-                updatedPairs.add(pair);
             }
         }
-        return updatedPairs;
+        affectedPairs.sort(Comparator
+                .comparingLong(EventPair::first)
+                .thenComparingLong(EventPair::second));
+        return affectedPairs;
     }
 
-    private void publishSimilarities(List<EventPair> updatedPairs, UserActionAvro action) {
-        if (updatedPairs.isEmpty()) {
+    private void publishSimilarities(List<EventPair> affectedPairs, UserActionAvro action) {
+        if (affectedPairs.isEmpty()) {
             return;
         }
 
@@ -82,7 +87,7 @@ public class EventSimilarityAggregator {
             return;
         }
 
-        for (EventPair pair : updatedPairs) {
+        for (EventPair pair : affectedPairs) {
             long otherEventId = pair.first() == changedEventId ? pair.second() : pair.first();
             if (otherEventId == changedEventId) {
                 continue;
