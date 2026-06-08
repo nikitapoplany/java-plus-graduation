@@ -41,11 +41,11 @@ public class FeignBackedAdminEventService extends AdminEventServiceImpl {
                                     String rangeEnd,
                                     int from,
                                     int size) {
-        return enricher.enrichDtos(super.getEvents(users, states, categories, rangeStart, rangeEnd, from, size));
+        return enricher.enrichDtoRatings(super.getEvents(users, states, categories, rangeStart, rangeEnd, from, size));
     }
 
     @Override
     public EventDto updateEvent(Long eventId, UpdateEventAdminRequest updateRequest) {
-        return enricher.enrich(super.updateEvent(eventId, updateRequest));
+        return enricher.enrichRating(super.updateEvent(eventId, updateRequest));
     }
 }

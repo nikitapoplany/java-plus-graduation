@@ -71,8 +71,6 @@ public class AdminEventServiceImpl implements AdminEventService {
         List<Event> events = eventPage.getContent();
         log.debug("Найдено {} событий", events.size());
 
-        statsService.setViewsForEvents(events);
-
         return events.stream()
                 .map(EventMapper::toDto)
                 .toList();
@@ -108,9 +106,6 @@ public class AdminEventServiceImpl implements AdminEventService {
 
         Event savedEvent = eventRepository.save(event);
         log.debug("Событие сохранено с id={}", savedEvent.getId());
-
-        Long views = statsService.getViews(savedEvent);
-        savedEvent.setViews(views);
 
         log.info("Событие с id={} успешно обновлено", eventId);
         return EventMapper.toDto(savedEvent);

@@ -43,6 +43,15 @@ public class EventResponseEnricher {
         return event;
     }
 
+    public EventDto enrichRating(EventDto event) {
+        if (event == null || event.getId() == null) {
+            return event;
+        }
+
+        event.setRating(getRating(event.getId()));
+        return event;
+    }
+
     public List<EventDto> enrichDtos(List<EventDto> events) {
         if (events == null || events.isEmpty()) {
             return events;
@@ -55,6 +64,19 @@ public class EventResponseEnricher {
 
         events.forEach(event -> event.setConfirmedRequests(
                 counts.getOrDefault(event.getId(), ValidationConstants.DEFAULT_CONFIRMED_REQUESTS)));
+        Map<Long, Double> ratings = getRatings(events.stream()
+                .map(EventDto::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()));
+        events.forEach(event -> event.setRating(ratings.getOrDefault(event.getId(), 0.0)));
+        return events;
+    }
+
+    public List<EventDto> enrichDtoRatings(List<EventDto> events) {
+        if (events == null || events.isEmpty()) {
+            return events;
+        }
+
         Map<Long, Double> ratings = getRatings(events.stream()
                 .map(EventDto::getId)
                 .filter(Objects::nonNull)
