@@ -28,7 +28,6 @@ public class UserActionCollectorGrpcService extends UserActionControllerGrpc.Use
             UserActionAvro avro = UserActionMapper.toAvro(request);
             kafkaTemplate.send(
                     properties.getTopics().getUserActions(),
-                    Long.toString(avro.getEventId()),
                     AvroBytes.serialize(avro)
             );
             log.debug("Collected user action: userId={}, eventId={}, type={}",

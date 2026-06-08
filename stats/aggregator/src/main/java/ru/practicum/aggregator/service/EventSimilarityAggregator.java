@@ -88,7 +88,6 @@ public class EventSimilarityAggregator {
                     .build();
             kafkaTemplate.send(
                     properties.getTopics().getEventSimilarity(),
-                    pair.first() + ":" + pair.second(),
                     AvroBytes.serialize(similarity)
             );
             log.debug("Published event similarity: eventA={}, eventB={}, score={}",
