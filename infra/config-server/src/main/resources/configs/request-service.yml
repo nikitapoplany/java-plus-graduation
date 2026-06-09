@@ -22,6 +22,19 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+grpc:
+  client:
+    collector:
+      address: ${GRPC_CLIENT_COLLECTOR_ADDRESS:discovery:///collector}
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+    analyzer:
+      address: ${GRPC_CLIENT_ANALYZER_ADDRESS:discovery:///analyzer}
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+
 app:
   default-page-size: 10
   event:

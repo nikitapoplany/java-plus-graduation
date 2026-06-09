@@ -23,6 +23,28 @@
 
 JPA-модель пока сохраняет связи между `events`, `users`, `requests` и `comments`; это осознанный промежуточный шаг. Следующая итерация разделения данных должна заменить связи на id/snapshot-поля и закрепить владение таблицами за отдельными сервисами.
 
+Рекомендательная подсистема находится в модуле `stats`:
+
+- `stats-contract` - общие Protobuf и Avro контракты.
+- `collector` - принимает пользовательские действия по gRPC и пишет Avro-сообщения в Kafka.
+- `aggregator` - читает действия пользователей из Kafka, инкрементально считает сходство мероприятий и пишет результаты в Kafka.
+- `analyzer` - читает действия и сходства из Kafka, хранит их в БД и отдает рекомендации по gRPC.
+- `stats-client` - общий клиентский модуль: старый REST-клиент статистики и новые gRPC-клиенты Collector/Analyzer.
+- `stats-server` - сохранен для совместимости старого статистического API.
+
+Kafka-топики:
+
+- `stats.user-actions.v1` - действия пользователей: просмотр, регистрация, лайк.
+- `stats.events-similarity.v1` - рассчитанные коэффициенты сходства мероприятий.
+
+Вес действий в рекомендательном контуре:
+
+- `VIEW` - `0.4`.
+- `REGISTER` - `0.8`.
+- `LIKE` - `1.0`.
+
+Для одного пользователя и одного мероприятия учитывается только действие с максимальным весом.
+
 ## Gateway Routes
 
 Gateway получает маршруты из `gateway-server.yml`:
@@ -63,6 +85,36 @@ Gateway получает маршруты из `gateway-server.yml`:
 
 Feign-клиенты находятся в пакетах `ru.practicum.internal.client` соответствующих сервисов.
 
+## Recommendation API
+
+gRPC и Avro контракты находятся в `stats/stats-contract`.
+
+Collector gRPC:
+
+- package `stats.service.collector`
+- service `UserActionController`
+- `CollectUserAction(UserActionProto) -> Empty`
+- Java client: `UserActionClient`
+
+Analyzer gRPC:
+
+- package `stats.service.dashboard`
+- service `RecommendationsController`
+- `GetRecommendationsForUser(UserPredictionsRequestProto) -> stream RecommendedEventProto`
+- `GetSimilarEvents(SimilarEventsRequestProto) -> stream RecommendedEventProto`
+- `GetInteractionsCount(InteractionsCountRequestProto) -> stream RecommendedEventProto`
+- Java client: `RecommendationsClient`
+
+Изменения внешнего API событий:
+
+- `GET /events` больше не отправляет просмотр в статистику.
+- `GET /events/{id}` при наличии заголовка `X-EWM-USER-ID` отправляет действие `VIEW` в Collector.
+- `GET /events/recommendations` возвращает рекомендации для пользователя из заголовка `X-EWM-USER-ID`.
+- `PUT /events/{eventId}/like` отправляет действие `LIKE`; лайк доступен только после просмотра события пользователем.
+- В DTO событий добавлено поле `rating`, которое рассчитывается через Analyzer. Поле `views` временно сохранено для обратной совместимости старого кода.
+
+`request-service` при успешном `POST /users/{userId}/requests` отправляет действие `REGISTER` в Collector. Недоступность рекомендательной подсистемы не должна ломать основные пользовательские сценарии: core-сервисы используют fallback и продолжают отвечать.
+
 ## Конфигурация
 
 Все сервисы получают настройки через Config Server:
@@ -71,11 +123,16 @@ Feign-клиенты находятся в пакетах `ru.practicum.internal
 - `event-service.yml`
 - `request-service.yml`
 - `comment-service.yml`
+- `collector.yml`
+- `aggregator.yml`
+- `analyzer.yml`
 - `stats-server.yml`
 - `gateway-server.yml`
 - `main-service.yml`
 
-Для CI значения datasource берутся из `SPRING_DATASOURCE_*` или `POSTGRES_*`. По умолчанию используется `jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/ewm_main_db` для доменных сервисов и `ewm_stats_db` для сервиса статистики.
+Для CI значения datasource берутся из `SPRING_DATASOURCE_*` или `POSTGRES_*`. По умолчанию используется `jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/ewm_main_db` для доменных сервисов и `ewm_stats_db`/`stats` для статистики и Analyzer.
+
+Kafka настраивается через `SPRING_KAFKA_BOOTSTRAP_SERVERS`. В Docker Compose используется `kafka:9092`, локальный default в конфигах - `localhost:9092`.
 
 ## Локальный запуск
 

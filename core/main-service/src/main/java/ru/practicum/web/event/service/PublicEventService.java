@@ -9,6 +9,10 @@ public interface PublicEventService {
 
     EventDto getEvent(Long id);
 
+    default EventDto getEvent(Long id, Long userId) {
+        return getEvent(id);
+    }
+
     List<EventShortDto> getEvents(
             String text,
             List<Long> categories,
@@ -20,6 +24,13 @@ public interface PublicEventService {
             int from,
             int size
     );
+
+    default List<EventShortDto> getRecommendations(Long userId, int maxResults) {
+        return List.of();
+    }
+
+    default void likeEvent(Long userId, Long eventId) {
+    }
 
     default List<EventDto> getEvents() {
         return List.of();
